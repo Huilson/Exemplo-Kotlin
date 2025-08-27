@@ -1,5 +1,7 @@
 package org.example
 
+import org.example.ui.menu
+
 fun main() {
-    println("Huilson")
+    menu()
 }
