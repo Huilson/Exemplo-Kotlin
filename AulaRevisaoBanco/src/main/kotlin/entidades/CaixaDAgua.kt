@@ -1,6 +1,7 @@
 package org.example.entidades
 
 import org.example.enumeradores.Material
+import java.math.BigDecimal
 
 class CaixaDAgua (
     val material: Material,
@@ -9,4 +10,5 @@ class CaixaDAgua (
     val largura: Double,
     val profundida: Double,
     val blablablabla: String,
+    val preco: BigDecimal
 )
