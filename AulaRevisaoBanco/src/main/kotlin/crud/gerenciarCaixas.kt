@@ -32,7 +32,7 @@ fun criarTabelaCaixa() {
     banco.close()//Encerra a conexão com o banco
 }
 
-fun cadastrarCaixa() {
+fun cadastrarCaixa(id : Int) {
     println("Preço da Caixa:")
     val preco = readln().toBigDecimal()
 
@@ -50,7 +50,6 @@ fun cadastrarCaixa() {
         4 -> material = Material.ARGAMASSA
         else -> material = Material.PLASTICO
     }
-
     println("Capacidade da Caixa em Litros: ")
     val litros = readln().toDouble()
 
@@ -78,26 +77,75 @@ fun cadastrarCaixa() {
         capacidade = litros,
         preco = preco
     )
-    val banco = conectar.conectarComBanco()!!.prepareStatement(
-        "INSERT INTO CaixaDAgua" +
-                " (material, capacidade, altura, " +
-                " largura, profundidade, blablablabla, preco)" +
-                " VALUES (?, ?, ?, ?, ?, ?, ?)"
-    )
-    banco.setString(1, c.material.name)//Enum deve sempre usar .name no final
-    banco.setDouble(2, c.capacidade!!)//Atributos nulos devem ser seguidos de !!
-    banco.setDouble(3, c.altura)
-    banco.setDouble(4, c.largura)
-    banco.setDouble(5, c.profundida)
-    banco.setString(6, c.blablablabla)
-    banco.setString(7, c.preco.toString())//No banco salve o BigDecimal como String
-
-    banco.executeUpdate()//Isso fará um COMMIT no banco
-
+    val banco = conectar.conectarComBanco()!!
+    if(id == 0){
+        val salvar = banco.prepareStatement(
+            "INSERT INTO CaixaDAgua" +
+                    " (material, capacidade, altura, " +
+                    " largura, profundidade, blablablabla, preco)" +
+                    " VALUES (?, ?, ?, ?, ?, ?, ?)"
+        )
+        salvar.setString(1, c.material.name)//Enum deve sempre usar .name no final
+        salvar.setDouble(2, c.capacidade!!)//Atributos nulos devem ser seguidos de !!
+        salvar.setDouble(3, c.altura)
+        salvar.setDouble(4, c.largura)
+        salvar.setDouble(5, c.profundida)
+        salvar.setString(6, c.blablablabla)
+        salvar.setString(7, c.preco.toString())//No banco salve o BigDecimal como String
+        salvar.executeUpdate()//Isso fará um COMMIT no banco
+        salvar.close()
+    }else{
+        val sql = "UPDATE CaixaDAgua SET " +
+                " material = ?," +
+                " capacidade = ?," +
+                " altura = ?," +
+                " largura = ?," +
+                " profundidade = ?," +
+                " blablablabla = ?," +
+                " preco = ?" +
+                " WHERE id = ?"
+        val editar = banco.prepareStatement(sql)
+        editar.setInt(8, id)
+        editar.setString(1, c.material.name)//Enum deve sempre usar .name no final
+        editar.setDouble(2, c.capacidade!!)//Atributos nulos devem ser seguidos de !!
+        editar.setDouble(3, c.altura)
+        editar.setDouble(4, c.largura)
+        editar.setDouble(5, c.profundida)
+        editar.setString(6, c.blablablabla)
+        editar.setString(7, c.preco.toString())//No banco salve o BigDecimal como String
+        editar.executeUpdate()//Isso fará um COMMIT no banco
+        editar.close()
+    }
     banco.close()//Fecha a transação e a conexão com o banco
 }
 
 fun editarCaixa() {
+    println("Digite o ID que deseja editar")
+    var id = readln().toInt()
+
+    val banco = conectar.conectarComBanco()
+    val sqlBusca = "SELECT * FROM CaixaDAgua WHERE id = ?"
+    val resultados = banco!!.prepareStatement(sqlBusca)
+    resultados.setInt(1, id)
+    val retorno = resultados.executeQuery()
+
+    while (retorno.next()) {
+        println("---------------------------------------------")
+        println("Id: ${retorno.getString("id")}")
+        id = retorno.getString("id").toInt()//ID da caixa que será editada
+
+        println("Material: ${retorno.getString("material")}")
+        println("Capacidade: ${retorno.getString("capacidade")}")
+        println("Altura: ${retorno.getString("altura")}")
+        println("Largura: ${retorno.getString("largura")}")
+        println("Profundidade: ${retorno.getString("profundidade")}")
+        println("Blablablabla: ${retorno.getString("blablablabla")}")
+        println("Preço: ${retorno.getString("preco")}")
+    }
+
+    println("Faça suas alterações: ")
+    cadastrarCaixa(id)
+    banco.close()
 }
 
 fun listarCaixas() {
@@ -118,8 +166,9 @@ fun listarCaixas() {
         println("Profundidade: ${resultados.getString("profundidade")}")
         println("Blablablabla: ${resultados.getString("blablablabla")}")
         println("Preço: ${resultados.getString("preco")}")
-
     }
+    resultados.close()
+    banco.close()
 }
 
 fun excluirCaixa() {
@@ -143,6 +192,7 @@ fun excluirCaixa() {
         println("Blablablabla: ${retorno.getString("blablablabla")}")
         println("Preço: ${retorno.getString("preco")}")
     }
+    retorno.close()
 
     println("Tem certeza que deseja excluir esse registro?")
     val resposta = readln().lowercase()
@@ -151,10 +201,11 @@ fun excluirCaixa() {
             val deletar = banco.prepareStatement("DELETE FROM CaixaDAgua WHERE id = ?")
             deletar.setInt(1, id)//Diz qual é o valor do 1º ponto de interrogação (?)
             deletar.executeUpdate()//Manda a instrução para ser executada no banco
+            deletar.close()
         }
         else -> {
             println("Operação cancelada!")
         }
     }
-
+    banco.close()
 }
